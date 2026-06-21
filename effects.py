@@ -82,7 +82,7 @@ def radial_pulse(nodes: list[Node], pulse_time=2.0, pulse_width=0.1):
             node.color = COLOR_OFF
     
 
-def spinner(nodes: list[Node], rev_period=3, num_arms=3, arm_thickness=0.5, center_x=0.5, center_y=0.5, twist=1):
+def spinner(nodes: list[Node], rev_period=3, num_arms=3, arm_thickness=0.5, center_x=0.5, center_y=0.5, twist=0):
     """
     Renders a spinning fan-like element
 

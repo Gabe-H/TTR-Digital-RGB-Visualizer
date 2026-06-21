@@ -27,6 +27,7 @@ clock = pygame.time.Clock()
 running = True
 screen.fill("black")
 
+
 # Lists containing pygame elements
 # (after they're read from csv's)
 train_nodes: list[Node] = []
@@ -128,8 +129,12 @@ def draw_cities():
     for node in city_nodes:
         x = node.x
         y = node.y
+        c = node.color
 
-        pygame.draw.circle(screen, "red", (x, y), CITY_RADIUS)
+        if c is None:
+            c = COLOR_OFF
+
+        pygame.draw.circle(screen, c, (x, y), CITY_RADIUS)
 
 
 def load_relative_coords(nodes: list[Node], min_x, max_x, min_y, max_y):
@@ -154,6 +159,7 @@ if __name__ == "__main__":
     DIMS = (min_x, min_y, max_x, max_y)
 
     load_relative_coords(train_nodes, min_x, max_x, min_y, max_y)
+    load_relative_coords(city_nodes, min_x, max_x, min_y, max_y)
 
     effect_index = 0
     ## Main loop
@@ -172,8 +178,10 @@ if __name__ == "__main__":
         # wipe_left_to_right(train_nodes)
         # radial_pulse(train_nodes)
         spinner(train_nodes)
+        spinner(city_nodes)
 
         draw_trains()
+        draw_cities()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
