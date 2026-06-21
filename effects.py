@@ -82,7 +82,7 @@ def radial_pulse(nodes: list[Node], pulse_time=2.0, pulse_width=0.1):
             node.color = COLOR_OFF
     
 
-def spinner(nodes: list[Node], rev_period=3, num_arms=3, arm_thickness=0.1, center_x=0.5, center_y=0.5):
+def spinner(nodes: list[Node], rev_period=3, num_arms=3, arm_thickness=0.5, center_x=0.5, center_y=0.5, twist=1):
     """
     Renders a spinning fan-like element
 
@@ -91,6 +91,7 @@ def spinner(nodes: list[Node], rev_period=3, num_arms=3, arm_thickness=0.1, cent
     rev_period: period of 1 revolution in seconds
     num_arms: number of arms on fan
     arm_width: width of each arm from 0-1
+    twist: twist the arms. Useful range is about 3 to -3
     """
 
     t = pygame.time.get_ticks() / 1000.0
@@ -106,9 +107,9 @@ def spinner(nodes: list[Node], rev_period=3, num_arms=3, arm_thickness=0.1, cent
             u = node.u - center_x
             v = node.v - center_y
 
-            # r = 
+            r = math.sqrt(u**2 + v**2)
 
-            node_theta = math.atan2(v, u)
+            node_theta = math.atan2(v, u) + math.pi*twist*r
             
             angular_diff = math.atan2(
                 math.sin(node_theta - arm_theta),
