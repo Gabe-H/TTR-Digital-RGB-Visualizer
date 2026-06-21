@@ -4,6 +4,7 @@ import math
 import csv
 from effects import *
 from board import *
+from collections import Counter
 
 ## SVG dimensions
 DRAWING_WIDTH = 762 # unit height of svg file
@@ -97,19 +98,21 @@ def read_trains(filename):
                 node = Node(x, y, r)
                 train_nodes.append(Node(x, y, r))
 
+                node_index = len(train_nodes) - 1
+
                 # Get id data
                 label = row['label']
                 label_parts = list(map(int, label.split('-')))
 
-                connection_id = label_parts[0]
-                node_index = label_parts[1]
+                connection_id = label_parts[0] # Which connection we are targetting
+                connection_index = label_parts[1] # Which individual node in the connection to set
 
                 try:
-                    track_index = label_parts[2]
+                    track_index = label_parts[2] # Optional: Handle multitrack connections
                 except IndexError:
                     track_index = 0
 
-                connections[connection_id].set_node(node, node_index-1, track_index-1)
+                connections[connection_id].set_node(node_index, connection_index-1, track_index-1)
 
             except TypeError:
                 continue
@@ -145,7 +148,7 @@ def read_cities(filename):
                 for city in cities:
                     if city.name == label:
                         found = True
-                        city.add_node(node)
+                        city.add_node(len(city_nodes) - 1)
 
                 if not found:
                     print("failed to find", label)
@@ -172,6 +175,37 @@ def load_relative_coords(nodes: list[Node], min_x, max_x, min_y, max_y):
 
         nodes[i].set_relative_position(u, v)
 
+def get_route_end_cities(route: list[tuple[int, int]]) -> tuple[City, City]:
+    """
+    Given a route like [(connection_index, track_index), ...],
+    return the two endpoint cities.
+
+    Endpoints are cities that appear in exactly one selected connection.
+    """
+    city_counts = Counter()
+
+    for connection_index, track_index in route:
+        connection = connections[connection_index]
+
+        # Optional validation
+        if track_index < 0 or track_index >= len(connection.nodes):
+            raise ValueError(
+                f"Invalid track_index {track_index} for connection {connection_index}"
+            )
+
+        city_counts[connection.start_city] += 1
+        city_counts[connection.end_city] += 1
+
+    endpoints = [city for city, count in city_counts.items() if count == 1]
+
+    if len(endpoints) != 2:
+        raise ValueError(
+            f"Expected exactly 2 endpoint cities, found {len(endpoints)}: "
+            f"{[(city.name, city_counts[city]) for city in city_counts]}"
+        )
+
+    return endpoints[0], endpoints[1]
+
 
 if __name__ == "__main__":
     read_trains("rectangle_centers_rotations.csv")
@@ -190,23 +224,64 @@ if __name__ == "__main__":
     load_relative_coords(city_nodes, min_x, max_x, min_y, max_y)
 
     effect_index = 0
+    # i = 0
+
+    # route = [
+    #     5, 19, 39, 53, 54, 56, 63, 67, 70, 74
+    # ]
+
+    route = [
+        (2, 0), (9, 0), (17, 0), (22, 0), (36, 0), (44, 1), (61, 0), (60, 1)
+    ]
+
+    for conn_id, conn_track in route:
+        for node_ndx in connections[conn_id].nodes[conn_track]:
+            train_nodes[node_ndx].color = COLOR_ON
+
+        for node_ndx in [
+            connections[conn_id].start_city.node,
+            connections[conn_id].end_city.node
+            ]:
+            city_nodes[node_ndx].color = COLOR_ON
+        
+        draw_cities()
+        draw_trains()
+        pygame.display.flip()
+        clock.tick(10) # FPS limiter
+
+    start_city, end_city = get_route_end_cities(route)
+
+    city_nodes[start_city.node].color = 'red'
+    city_nodes[end_city.node].color = 'green'
+
+
+
     ## Main loop
     while running:
         effect_index = (pygame.time.get_ticks() // 5000) % 3
         screen.fill('black')
 
-        # if effect_index == 0:
-            # wipe_right_to_left(train_nodes)
-        # elif effect_index == 1:
-            # wipe_left_to_right(train_nodes)
-        # elif effect_index == 2:
-            # radial_pulse(train_nodes)
-
         # wipe_right_to_left(train_nodes)
         # wipe_left_to_right(train_nodes)
         # radial_pulse(train_nodes)
-        spinner(train_nodes)
+        # spinner(train_nodes)
         # spinner(city_nodes)
+
+
+        # for node_list in connections[i].nodes:
+        #     for node_ndx in node_list:
+        #         try:
+        #             color = train_nodes[node_ndx].color
+        #             train_nodes[node_ndx].color = COLOR_ON if color == COLOR_OFF or color is None else COLOR_OFF
+        #         except TypeError as e:
+        #             print(f"Node: {node_ndx}, connection: {i}")
+        #             raise e
+
+        # city_nodes[connections[i].start_city.node].color = COLOR_ON
+        # city_nodes[connections[i].end_city.node].color = COLOR_ON
+        # i += 1
+        # i %= len(connections)
+
 
         draw_trains()
         draw_cities()
@@ -217,6 +292,6 @@ if __name__ == "__main__":
 
         pygame.display.flip()
 
-        clock.tick(50) # FPS limiter
+        clock.tick(10) # FPS limiter
 
     pygame.quit()
