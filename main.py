@@ -3,6 +3,7 @@ import pygame.draw
 import math
 import csv
 from effects import *
+from board import *
 
 ## SVG dimensions
 DRAWING_WIDTH = 762 # unit height of svg file
@@ -87,17 +88,32 @@ def read_trains(filename):
 
         for row in reader:
             try:
-                # i = int(row['index'])
+                # Get geometric data
                 x = float(row['center_x']) * SCREEN_WIDTH/DRAWING_WIDTH
                 y = float(row['center_y']) * SCREEN_HEIGHT/DRAWING_HEIGHT
                 r = float(row['rotation_degrees'])
 
+                # Add to list for display
+                node = Node(x, y, r)
+                train_nodes.append(Node(x, y, r))
+
+                # Get id data
+                label = row['label']
+                label_parts = list(map(int, label.split('-')))
+
+                connection_id = label_parts[0]
+                node_index = label_parts[1]
+
+                try:
+                    track_index = label_parts[2]
+                except IndexError:
+                    track_index = 0
+
+                connections[connection_id].set_node(node, node_index-1, track_index-1)
+
             except TypeError:
                 continue
 
-
-            # trains.append(draw_rectangle(x, y, W, H, COLOR_OFF, r))
-            train_nodes.append(Node(x, y, r))
 
 def draw_trains():
     for node in train_nodes:
@@ -120,10 +136,22 @@ def read_cities(filename):
             try:
                 x = float(row['center_x']) * SCREEN_WIDTH/DRAWING_WIDTH
                 y = float(row['center_y']) * SCREEN_HEIGHT/DRAWING_HEIGHT
-            except:
-                continue
+                label = row['label']
 
-            city_nodes.append(Node(x, y))
+                node = Node(x, y)
+                city_nodes.append(node)
+
+                found = False
+                for city in cities:
+                    if city.name == label:
+                        found = True
+                        city.add_node(node)
+
+                if not found:
+                    print("failed to find", label)
+
+            except:
+                print("failed to parse row: ", row)
 
 def draw_cities():
     for node in city_nodes:
@@ -178,7 +206,7 @@ if __name__ == "__main__":
         # wipe_left_to_right(train_nodes)
         # radial_pulse(train_nodes)
         spinner(train_nodes)
-        spinner(city_nodes)
+        # spinner(city_nodes)
 
         draw_trains()
         draw_cities()

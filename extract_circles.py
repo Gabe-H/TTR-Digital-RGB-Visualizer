@@ -256,7 +256,8 @@ def extract_circles(svg_path):
             rows.append({
                 "id": circle_id,
                 "center_x": center_x,
-                "center_y": center_y
+                "center_y": center_y,
+                "label": label
             })
 
         for child in list(element):
