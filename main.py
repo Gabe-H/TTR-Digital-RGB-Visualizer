@@ -105,6 +105,9 @@ def draw_trains():
         c = node.color
         r = node.rot
 
+        if c is None:
+            c = COLOR_OFF
+
         draw_rectangle(x, y, TRAIN_WIDTH, TRAIN_HEIGHT, c, r)
 
 def read_cities(filename):
@@ -129,6 +132,14 @@ def draw_cities():
         pygame.draw.circle(screen, "red", (x, y), CITY_RADIUS)
 
 
+def load_relative_coords(nodes: list[Node], min_x, max_x, min_y, max_y):
+    for i in range(len(nodes)):
+        u = (nodes[i].x - min_x) / (max_x - min_x)
+        v = (nodes[i].y - min_y) / (max_y - min_y)
+
+        nodes[i].set_relative_position(u, v)
+
+
 if __name__ == "__main__":
     read_trains("rectangle_centers_rotations.csv")
     read_cities("circle_centers.csv")
@@ -142,17 +153,25 @@ if __name__ == "__main__":
 
     DIMS = (min_x, min_y, max_x, max_y)
 
-    # u = (node.x - min_x) / (max_x - min_x)
-    # v = (node.y - min_y) / (max_y - min_y)
+    load_relative_coords(train_nodes, min_x, max_x, min_y, max_y)
 
+    effect_index = 0
     ## Main loop
     while running:
-        # if (pygame.time.get_ticks() // 6000) % 2:
-        #     wipe_right_to_left()
-        # else:
-        #     wipe_left_to_right()
+        effect_index = (pygame.time.get_ticks() // 5000) % 3
+        screen.fill('black')
 
-        radial_pulse(train_nodes, DIMS)
+        # if effect_index == 0:
+            # wipe_right_to_left(train_nodes)
+        # elif effect_index == 1:
+            # wipe_left_to_right(train_nodes)
+        # elif effect_index == 2:
+            # radial_pulse(train_nodes)
+
+        # wipe_right_to_left(train_nodes)
+        # wipe_left_to_right(train_nodes)
+        # radial_pulse(train_nodes)
+        spinner(train_nodes)
 
         draw_trains()
 
@@ -162,6 +181,6 @@ if __name__ == "__main__":
 
         pygame.display.flip()
 
-        clock.tick(30) # FPS limiter
+        clock.tick(50) # FPS limiter
 
     pygame.quit()
