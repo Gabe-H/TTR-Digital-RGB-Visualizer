@@ -108,7 +108,7 @@ cities: tuple[City] = (
     MIAMI
 )
 
-# In specific order as found in "Board - Routes.jpg"
+# In specific order as found in "drawing.svg"
 connections = (
     Connection(SEATTLE, VANCOUVER, 1, 2),
     Connection(SEATTLE, PORTLAND, 1, 2),
